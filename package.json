@@ -1,0 +1,13 @@
+{
+  "name": "notion-event-sync",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/node": "^5.3.6",
+    "dotenv": "^17.2.0"
+  }
+}
