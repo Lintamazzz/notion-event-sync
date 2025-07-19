@@ -1,4 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
+import dispatch from '../src/dispatcher.js';
+import { NotionEvent, NotionEventSchema } from '../src/types/notion.js';
 
 export default (req: VercelRequest, res: VercelResponse) => {
   try {
@@ -8,6 +10,10 @@ export default (req: VercelRequest, res: VercelResponse) => {
       method: req.method,
       body: req.body,
     })
+
+    if (NotionEventSchema.safeParse(req.body).success) {
+      dispatch(req.body as NotionEvent)
+    }
 
     const name = req.query.name ?? 'World';
     res.status(200).json({ msg: `Hello ${name}!` });
