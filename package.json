@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@notionhq/client": "^4.0.1",
+    "@upstash/redis": "^1.35.1",
     "@vercel/node": "^5.3.6",
     "dotenv": "^17.2.0",
     "googleapis": "^153.0.0",

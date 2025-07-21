@@ -2,15 +2,53 @@ import { google } from "googleapis"
 import { Event } from "../../types/google-calendar.js"
 import { z } from "zod"
 import "dotenv/config"
+import { cache } from "../../utils/cache.js";
 
 
-// set up a google calendar client
+// ==============  Setup a Google Calendar client  =====================
+const ACCESS_TOKEN_KEY = 'accessToken';
+const LOCK_KEY = 'accessToken:lock';
+const MAX_RETRY = 5;
+const RETRY_INTERVAL_MS = 1000;
+
+// Access token
+let token: string | undefined = undefined;
+
+// Attempt to get access_token from Redis cache (to reuse the access_token)
+const cached = await cache.get(ACCESS_TOKEN_KEY);
+
+if (cached) {
+    // Token exists in Redis, use it directly
+    token = cached;
+    console.log("Get access_token from cache");
+} else {
+    // No token in cache, attempt to acquire lock to refresh token
+    const locked = await cache.tryLock(LOCK_KEY, 30);
+
+    if (locked) {
+        // Use the undefined token directly, it will automatically refresh the token
+        console.log("Lock success, refresh the access_token");
+    } else {
+        // Lock not acquired: retry until someone else refreshes and sets the token
+        for (let i = 0; i < MAX_RETRY; i++) {
+            await delay(RETRY_INTERVAL_MS);
+
+            const cachedRetry = await cache.get(ACCESS_TOKEN_KEY);
+            if (cachedRetry) {
+                token = cachedRetry;
+                console.log("Get access_token from cache, retry cnt:", i + 1);
+                break;
+            }
+        }
+    }
+}
+
 const oAuth2Client = new google.auth.OAuth2({
     client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID,
     client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
     credentials: {
         refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN,
-        access_token: getAccessToken(),
+        access_token: token,
     }
 })
 const calendar = google.calendar({ version: "v3", auth: oAuth2Client })
@@ -20,10 +58,12 @@ const calendar = google.calendar({ version: "v3", auth: oAuth2Client })
 // listen for access_token changes (old access_token expires, and new access_token is generated using refresh_token) 
 oAuth2Client.on('tokens', (tokens) => {
     console.log(tokens)
+    cache.setex(ACCESS_TOKEN_KEY, tokens.access_token as string, { pxat: tokens.expiry_date });
+    cache.unLock(LOCK_KEY);
 })
-function getAccessToken() {
-    const token = process.env.GOOGLE_CALENDAR_ACCESS_TOKEN
-    return token;
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 
@@ -34,7 +74,7 @@ const iso = z.string().datetime({ offset: true });
 
 
 
-
+// =====================  API  =========================
 
 /**
  * @param eventId - required
