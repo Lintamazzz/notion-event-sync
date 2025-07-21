@@ -1,15 +1,18 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import { Event } from '../../src/types/google-calendar.js';
 import { insertEvent } from '../../src/platforms/google-calendar/client.js'
+import { getEventIdFromPageId } from '../../src/utils/idMapper.js';
 
 export default async (req: VercelRequest, res: VercelResponse) => {
     try {
+        const id = req.query.id as string;
         const start = req.query.start as string;
         const end = req.query.end as string;
         const summary = req.query.title as string;
         const description = req.query.desc as string;
 
         const event: Event = await insertEvent({
+            id: getEventIdFromPageId(id),
             start: { dateTime: start },
             end:   { dateTime: end   },
             summary,

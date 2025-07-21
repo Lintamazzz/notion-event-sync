@@ -27,7 +27,7 @@ function getAccessToken() {
 }
 
 
-// time format validation
+// time format validation for ISO 8601
 const iso = z.string().datetime({ offset: true });
 
 
@@ -86,6 +86,7 @@ export async function deleteEventById(eventId: string): Promise<void> {
  * }
  * ```
  * 
+ * @param event.id - optional - When creating a new Google Calendar Event, you can specify its ID. See: https://developers.google.com/workspace/calendar/api/v3/reference/events/insert
  * @param event.start - required
  * @param event.end - required 
  * @param event.summary - optional
