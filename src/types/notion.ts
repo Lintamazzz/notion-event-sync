@@ -2,17 +2,17 @@ import { z } from 'zod';
 
 // See: https://developers.notion.com/reference/webhooks-events-delivery
 export interface NotionEvent {
-    id: string;
-    timestamp: string;
-    workspace_id: string;
-    workspace_name: string;
-    subscription_id: string;
-    integration_id: string;
-    authors: Author[];
-    attempt_number: number;
-    entity: Entity;
-    type: EventType;
-    data: Object;
+  id: string;
+  timestamp: string;
+  workspace_id: string;
+  workspace_name: string;
+  subscription_id: string;
+  integration_id: string;
+  authors: Author[];
+  attempt_number: number;
+  entity: Entity;
+  type: EventType;
+  data: Object;
 }
 
 export const NotionEventSchema = z.object({
@@ -23,23 +23,23 @@ export const NotionEventSchema = z.object({
   subscription_id: z.string(),
   integration_id: z.string(),
   attempt_number: z.number(),
-  type: z.string(), 
+  type: z.string(),
 });
 
 
 export interface Author {
-    id: string;
-    type: "person" | "bot" | "agent";
+  id: string;
+  type: "person" | "bot" | "agent";
 }
 
 export interface Entity {
-    id: string;
-    type: "page" | "database" | "block";
+  id: string;
+  type: "page" | "database" | "block";
 }
 
 export type EventType = PageEventType | DatabaseEventType | CommentEventType;
 
-export type PageEventType = 
+export type PageEventType =
   | "page.content_updated"
   | "page.created"
   | "page.deleted"
