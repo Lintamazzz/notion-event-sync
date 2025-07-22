@@ -5,7 +5,12 @@ import { getEventById, isEventDeleted } from '../../src/platforms/google-calenda
 export default async (req: VercelRequest, res: VercelResponse) => {
     try {
         const id: string = req.query.id as string;
-        const event: Event = await getEventById(id);
+        const event = await getEventById(id);
+
+        if (!event) {
+            res.status(500).json({ err_msg: `Event ${id} not found in calendar` });
+            return;
+        }
 
         res.json({
             time: new Date().toISOString(),
@@ -14,6 +19,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         })
     } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        res.status(500).json({ err_msg: message });
+        res.status(500).json({ err_msg: message, error: e });
     }
 }

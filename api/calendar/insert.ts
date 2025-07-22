@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import { Event } from '../../src/types/google-calendar.js';
 import { insertEvent } from '../../src/platforms/google-calendar/client.js'
-import { getEventIdFromPageId } from '../../src/utils/idMapper.js';
+import { getEventIdFromPageId } from '../../src/utils/mapper.js';
 
 export default async (req: VercelRequest, res: VercelResponse) => {
     try {
@@ -25,6 +25,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         })
     } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        res.status(500).json({ err_msg: message });
+        res.status(500).json({ err_msg: message, error: e });
     }
 }

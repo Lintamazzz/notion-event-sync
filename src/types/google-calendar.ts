@@ -6,12 +6,12 @@ export interface Event {
     updated?: string;
     summary?: string;
     description?: string;
-    start: {
+    start?: {
         date?: string;
         dateTime?: string;
         timeZone?: string;
     };
-    end: {
+    end?: {
         date?: string;
         dateTime?: string;
         timeZone?: string;

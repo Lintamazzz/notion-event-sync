@@ -63,7 +63,7 @@ oAuth2Client.on('tokens', (tokens) => {
 })
 
 function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 
@@ -75,17 +75,28 @@ const iso = z.string().datetime({ offset: true });
 
 
 // =====================  API  =========================
+// Error Code See: https://developers.google.com/workspace/calendar/api/guides/errors
+
 
 /**
+ * return null if event is not found
  * @param eventId - required
- * @throws {Error} - if event is not found
  */
-export async function getEventById(eventId: string): Promise<Event> {
-    const result = await calendar.events.get({
-        calendarId: "primary",
-        eventId: eventId
-    })
-    return result.data as Event;
+export async function getEventById(eventId: string): Promise<Event | null> {
+    try {
+        const result = await calendar.events.get({
+            calendarId: "primary",
+            eventId: eventId
+        })
+        return result.data as Event;
+    } catch (err: any) {
+        if (err.code === 404) {
+            console.error(`Event ${eventId} not found in calendar`);
+            return null;
+        }
+        throw err;
+    }
+
 }
 
 /**
@@ -99,13 +110,25 @@ export function isEventDeleted(event: Event): boolean {
 
 /**
  * @param eventId - required
- * @throws {Error} - if event is not found or event has already been deleted
  */
 export async function deleteEventById(eventId: string): Promise<void> {
-    await calendar.events.delete({
-        calendarId: "primary",
-        eventId: eventId
-    })
+    try {
+        await calendar.events.delete({
+            calendarId: "primary",
+            eventId: eventId
+        })
+    } catch (err: any) {
+        if (err.code === 410) {
+            console.error(`Event ${eventId} has already been deleted`);
+            return;
+        }
+        if (err.code === 404) {
+            console.error(`Event ${eventId} not found in calendar`);
+            return;
+        }
+        console.log(err)
+        throw err;
+    }
 }
 
 /**
