@@ -39,6 +39,13 @@ export function pageToEvent(page: PageObjectResponse): Event {
 
 	const start = getEventDateFromPageDate(date.start);
 	const end = getEventDateFromPageDate(date.end || date.start);
+	// "YYYY-mm-dd" means All-Day-Event
+	// It uses [start, end), not [start, end]. So we should add 1 day to end time.
+	if (end?.date != undefined) {
+		const date = new Date(end.date);
+		date.setDate(date.getDate() + 1);
+		end.date = date.toISOString().split('T')[0];
+	}
 
 	return {
 		id: getEventIdFromPageId(page.id),
