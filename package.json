@@ -1,17 +1,21 @@
 {
-  "name": "notion-event-sync",
-  "version": "1.0.0",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "start": "vercel dev"
-  },
-  "dependencies": {
-    "@notionhq/client": "^4.0.1",
-    "@upstash/redis": "^1.35.1",
-    "@vercel/node": "^5.3.6",
-    "dotenv": "^17.2.0",
-    "googleapis": "^153.0.0",
-    "zod": "^3.25.76"
-  }
+	"name": "notion-event-sync",
+	"version": "1.0.0",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"start": "vercel dev",
+		"format": "prettier --write ."
+	},
+	"dependencies": {
+		"@notionhq/client": "^4.0.1",
+		"@upstash/redis": "^1.35.1",
+		"@vercel/node": "^5.3.6",
+		"dotenv": "^17.2.0",
+		"googleapis": "^153.0.0",
+		"zod": "^3.25.76"
+	},
+	"devDependencies": {
+		"prettier": "^3.6.2"
+	}
 }

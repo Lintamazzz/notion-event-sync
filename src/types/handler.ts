@@ -1,7 +1,7 @@
-import { NotionEvent } from "./notion.js"
+import { NotionEvent } from "./notion.js";
 
 export interface Handler {
-    handleCreate(event: NotionEvent): void
-    handleUpdate(event: NotionEvent): void
-    handleDelete(event: NotionEvent): void
+	handleCreate(event: NotionEvent): void;
+	handleUpdate(event: NotionEvent): void;
+	handleDelete(event: NotionEvent): void;
 }
