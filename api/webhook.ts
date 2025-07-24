@@ -25,6 +25,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 	} catch (e) {
 		console.error(e);
 		const message = e instanceof Error ? e.message : String(e);
-		res.status(500).json({ msg: message });
+		res.status(200).json({ msg: message });
 	}
 };
