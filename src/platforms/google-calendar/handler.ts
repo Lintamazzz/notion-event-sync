@@ -5,9 +5,22 @@ import { getPage } from "../notion/client.js";
 import { getEventIdFromPageId, pageToEvent } from "../../utils/mapper.js";
 import { Event } from "../../types/google-calendar.js";
 import { deleteEventById, getEventById, insertEvent, updateEvent } from "./client.js";
+import "dotenv/config";
 
 // See: https://developers.notion.com/reference/webhooks-events-delivery#event-delivery
 export class GoogleCalendarHandler implements Handler {
+	shouldHandle(event: NotionEvent): boolean {
+		const parent = event.data.parent;
+		const type = parent?.type;
+		const databaseId = parent?.id?.replace(/-/g, "");
+
+		// Only handle events from one specific notion database
+		if (type === "database" && databaseId === process.env.DATABASE_ID) {
+			return true;
+		}
+		return false;
+	}
+
 	async handleCreate(event: NotionEvent): Promise<void> {
 		// 1. Get Notion Page ID
 		const pageId = event.entity.id;

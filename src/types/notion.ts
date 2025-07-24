@@ -12,7 +12,7 @@ export interface NotionEvent {
 	attempt_number: number;
 	entity: Entity;
 	type: EventType;
-	data: Object;
+	data: EventData;
 }
 
 export const NotionEventSchema = z.object({
@@ -57,3 +57,13 @@ export type DatabaseEventType =
 	| "database.undeleted";
 
 export type CommentEventType = "comment.created" | "comment.deleted" | "comment.updated";
+
+export interface EventData {
+	parent?: Parent;
+	[key: string]: any;
+}
+
+export interface Parent {
+	id: string;
+	type: "page" | "database" | "space";
+}
