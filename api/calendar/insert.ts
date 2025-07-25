@@ -1,5 +1,4 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import { Event } from "../../src/types/google-calendar.js";
 import { insertEvent } from "../../src/platforms/google-calendar/client.js";
 import { getEventIdFromPageId } from "../../src/utils/mapper.js";
 
@@ -11,13 +10,18 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 		const summary = req.query.title as string;
 		const description = req.query.desc as string;
 
-		const event: Event = await insertEvent({
+		const event = await insertEvent({
 			id: getEventIdFromPageId(id),
 			start: { dateTime: start },
 			end: { dateTime: end },
 			summary,
 			description,
 		});
+
+		if (!event) {
+			res.status(500).json({ err_msg: `Event ${id} already exists` });
+			return;
+		}
 
 		res.json({
 			time: new Date().toISOString(),

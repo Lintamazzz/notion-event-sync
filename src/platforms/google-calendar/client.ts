@@ -118,7 +118,6 @@ export async function deleteEventById(eventId: string): Promise<void> {
 			console.error(`Event ${eventId} not found in calendar`);
 			return;
 		}
-		console.log(err);
 		throw err;
 	}
 }
@@ -148,12 +147,20 @@ export async function deleteEventById(eventId: string): Promise<void> {
  * @param event.description - optional
  * @throws {Error} - if time format is invalid or missing required fields or start time is after end time
  */
-export async function insertEvent(event: Event): Promise<Event> {
-	const result = await calendar.events.insert({
-		calendarId: "primary",
-		requestBody: event,
-	});
-	return result.data as Event;
+export async function insertEvent(event: Event): Promise<Event | null> {
+	try {
+		const result = await calendar.events.insert({
+			calendarId: "primary",
+			requestBody: event,
+		});
+		return result.data as Event;
+	} catch (err: any) {
+		if (err.code === 409) {
+			console.error(`Event ID ${event.id} already exists, assuming it was inserted by another request.`);
+			return null; // Alternatively, you can retrieve and return the existing event using getEventById(event.id).
+		}
+		throw err;
+	}
 }
 
 /**

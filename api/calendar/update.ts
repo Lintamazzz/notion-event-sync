@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Event } from "../../src/types/google-calendar.js";
-import { insertEvent, updateEvent } from "../../src/platforms/google-calendar/client.js";
+import { updateEvent } from "../../src/platforms/google-calendar/client.js";
 
 export default async (req: VercelRequest, res: VercelResponse) => {
 	try {
