@@ -6,7 +6,8 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 	try {
 		const timeMin = req.query.start as string;
 		const timeMax = req.query.end as string;
-		const events: Event[] = await listEvents({ timeMin, timeMax });
+		const calendarId = req.query.calendarId as string;
+		const events: Event[] = await listEvents(calendarId || undefined, { timeMin, timeMax });
 
 		res.json({
 			time: new Date().toISOString(),

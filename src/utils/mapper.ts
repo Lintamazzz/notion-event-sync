@@ -11,17 +11,20 @@ import { z } from "zod";
  * google calendar id uses base32hex -> See: https://developers.google.com/workspace/calendar/api/v3/reference/events/insert
  *
  * Notice: Once a calendar event is permanently deleted (i.e. removed from the trash), it cannot be restored or updated, and its ID cannot be reused to create a new event.
- * In this case, the mapping between the Notion page ID and the Google Calendar event ID will be permanently broken. The solution is to recreate an identical Notion page, so you can use the new page ID to create the event again.
- *
+ * In this case, the mapping between the Notion page ID and the Google Calendar event ID will be permanently broken.
+ * One solution is to recreate an identical Notion page, so you can use the new page ID to create the event in the same calendar again.
+ * Other solution is to create a new calendar, you can use the same page ID to create the event in the new calendar.
  */
 export function getEventIdFromPageId(pageId: string): string {
 	return pageId?.replace(/-/g, "");
 }
 
 /**
+ * Convert Notion Page Object to Google Calendar Event Object
  *
  * @param page - Notion Page Object
  * @returns Google Calendar Event Object
+ * @throws {Error} - if page is missing required date information or invalid date format
  */
 export function pageToEvent(page: PageObjectResponse): Event {
 	let title: string | undefined;
@@ -75,4 +78,24 @@ export function getEventDateFromPageDate(dateString: string) {
 	}
 
 	throw new Error(`Invalid date format: ${dateString}`);
+}
+
+export function getCalendarIdByYear(event: Event): string | undefined {
+	const str = process.env.GOOGLE_CALENDAR_MAPPING;
+	if (!str) {
+		console.log("GOOGLE_CALENDAR_MAPPING is not set");
+		return undefined;
+	}
+
+	let map;
+	try {
+		map = JSON.parse(str);
+	} catch (e) {
+		console.log("GOOGLE_CALENDAR_MAPPING is not valid JSON");
+		return undefined;
+	}
+
+	const date = event.start?.dateTime || event.start?.date;
+	const year = new Date(date as string).getFullYear();
+	return map[year] || undefined;
 }

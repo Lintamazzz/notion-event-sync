@@ -2,7 +2,7 @@ import { PageObjectResponse } from "@notionhq/client";
 import { Handler } from "../../types/handler.js";
 import { NotionEvent } from "../../types/notion.js";
 import { getPage } from "../notion/client.js";
-import { getEventIdFromPageId, pageToEvent } from "../../utils/mapper.js";
+import { getCalendarIdByYear, getEventIdFromPageId, pageToEvent } from "../../utils/mapper.js";
 import { Event } from "../../types/google-calendar.js";
 import { deleteEventById, getEventById, insertEvent, updateEvent } from "./client.js";
 import "dotenv/config";
@@ -24,7 +24,7 @@ export class GoogleCalendarHandler implements Handler {
 	async handleCreate(event: NotionEvent): Promise<void> {
 		// 1. Get Notion Page ID
 		const pageId = event.entity.id;
-		console.log(`GoogleCalendarHandler: handling create for page ${pageId}`);
+		console.log(`=========== GoogleCalendarHandler: handling create for page ${pageId} ===========`);
 
 		// 2. Confirm that Notion Page is not in trash
 		const page: PageObjectResponse = await getPage(pageId);
@@ -36,23 +36,29 @@ export class GoogleCalendarHandler implements Handler {
 		// 3. Map Notion Page Info to Google Calendar Event
 		const e: Event = pageToEvent(page);
 		console.log(e);
+		const calendarId: string | undefined = getCalendarIdByYear(e);
+		console.log(
+			calendarId === undefined
+				? `Not found in mapping, useing default calendar`
+				: `Found in mapping, using calendar ${calendarId}`,
+		);
 
 		// 4. Sync to Calendar
-		const exist = await getEventById(e.id as string);
+		const exist = await getEventById(e.id as string, calendarId);
 		if (!exist) {
-			await insertEvent(e);
+			await insertEvent(e, calendarId);
+			console.log(`Successfully insert page ${pageId} in calendar ${calendarId}`);
 		} else {
 			e.status = "confirmed"; // undelete if event is deleted
-			await updateEvent(e);
+			await updateEvent(e, calendarId);
+			console.log(`Successfully update page ${pageId} in calendar ${calendarId}`);
 		}
-
-		console.log(`Successfully synced page ${pageId} to calendar`);
 	}
 
 	async handleUpdate(event: NotionEvent): Promise<void> {
 		// 1. Get Notion Page ID
 		const pageId = event.entity.id;
-		console.log(`GoogleCalendarHandler: handling update for page ${pageId}`);
+		console.log(`=========== GoogleCalendarHandler: handling update for page ${pageId} ===========`);
 
 		// 2. Fetch the Latest Page Data
 		const page: PageObjectResponse = await getPage(pageId);
@@ -64,23 +70,29 @@ export class GoogleCalendarHandler implements Handler {
 		// 3. Map Notion Page Info to Google Calendar Event
 		const e: Event = pageToEvent(page);
 		console.log(e);
+		const calendarId: string | undefined = getCalendarIdByYear(e);
+		console.log(
+			calendarId === undefined
+				? `Not found in mapping, useing default calendar`
+				: `Found in mapping, using calendar ${calendarId}`,
+		);
 
 		// 4. Sync to Calendar
-		const exist = await getEventById(e.id as string);
+		const exist = await getEventById(e.id as string, calendarId);
 		if (exist) {
 			e.status = "confirmed"; // undelete if event is deleted
-			await updateEvent(e);
+			await updateEvent(e, calendarId);
+			console.log(`Successfully update page ${pageId} in calendar ${calendarId}`);
 		} else {
-			await insertEvent(e);
+			await insertEvent(e, calendarId);
+			console.log(`Successfully insert page ${pageId} in calendar ${calendarId}`);
 		}
-
-		console.log(`Successfully synced page ${pageId} to calendar`);
 	}
 
 	async handleDelete(event: NotionEvent): Promise<void> {
 		// 1. Get Notion Page ID
 		const pageId = event.entity.id;
-		console.log(`GoogleCalendarHandler: handling delete for page ${pageId}`);
+		console.log(`=========== GoogleCalendarHandler: handling delete for page ${pageId} ===========`);
 
 		// 2. Confirm that Notion Page is really in trash
 		const page: PageObjectResponse = await getPage(pageId);
@@ -89,9 +101,18 @@ export class GoogleCalendarHandler implements Handler {
 			return;
 		}
 
-		// 3. Sync to Calendar
-		await deleteEventById(getEventIdFromPageId(pageId));
+		// 3. Map Notion Page Info to Google Calendar Event
+		const e: Event = pageToEvent(page);
+		console.log(e);
+		const calendarId: string | undefined = getCalendarIdByYear(e);
+		console.log(
+			calendarId === undefined
+				? `Not found in mapping, useing default calendar`
+				: `Found in mapping, using calendar ${calendarId}`,
+		);
 
-		console.log(`Successfully synced page ${pageId} to calendar`);
+		// 4. Sync to Calendar
+		await deleteEventById(getEventIdFromPageId(pageId), calendarId);
+		console.log(`Successfully delete page ${pageId} in calendar ${calendarId}`);
 	}
 }

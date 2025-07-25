@@ -70,21 +70,23 @@ const iso = z.string().datetime({ offset: true });
 
 // =====================  API  =========================
 // Error Code See: https://developers.google.com/workspace/calendar/api/guides/errors
+const DEFAULT_CALENDAR_ID = process.env.GOOGLE_CALENDAR_DEFAULT_ID || "primary";
 
 /**
  * return null if event is not found
  * @param eventId - required
+ * @param calendarId - optional
  */
-export async function getEventById(eventId: string): Promise<Event | null> {
+export async function getEventById(eventId: string, calendarId: string = DEFAULT_CALENDAR_ID): Promise<Event | null> {
 	try {
 		const result = await calendar.events.get({
-			calendarId: "primary",
+			calendarId: calendarId,
 			eventId: eventId,
 		});
 		return result.data as Event;
 	} catch (err: any) {
 		if (err.code === 404) {
-			console.error(`Event ${eventId} not found in calendar`);
+			console.error(`Event ${eventId} not found in calendar ${calendarId}`);
 			return null;
 		}
 		throw err;
@@ -102,20 +104,21 @@ export function isEventDeleted(event: Event): boolean {
 
 /**
  * @param eventId - required
+ * @param calendarId - optional
  */
-export async function deleteEventById(eventId: string): Promise<void> {
+export async function deleteEventById(eventId: string, calendarId: string = DEFAULT_CALENDAR_ID): Promise<void> {
 	try {
 		await calendar.events.delete({
-			calendarId: "primary",
+			calendarId: calendarId,
 			eventId: eventId,
 		});
 	} catch (err: any) {
 		if (err.code === 410) {
-			console.error(`Event ${eventId} has already been deleted`);
+			console.error(`Event ${eventId} has already been deleted in calendar ${calendarId}`);
 			return;
 		}
 		if (err.code === 404) {
-			console.error(`Event ${eventId} not found in calendar`);
+			console.error(`Event ${eventId} not found in calendar ${calendarId}`);
 			return;
 		}
 		throw err;
@@ -145,18 +148,21 @@ export async function deleteEventById(eventId: string): Promise<void> {
  * @param event.end - required
  * @param event.summary - optional
  * @param event.description - optional
+ * @param calendarId - optional
  * @throws {Error} - if time format is invalid or missing required fields or start time is after end time
  */
-export async function insertEvent(event: Event): Promise<Event | null> {
+export async function insertEvent(event: Event, calendarId: string = DEFAULT_CALENDAR_ID): Promise<Event | null> {
 	try {
 		const result = await calendar.events.insert({
-			calendarId: "primary",
+			calendarId: calendarId,
 			requestBody: event,
 		});
 		return result.data as Event;
 	} catch (err: any) {
 		if (err.code === 409) {
-			console.error(`Event ID ${event.id} already exists, assuming it was inserted by another request.`);
+			console.error(
+				`Event ID ${event.id} already exists in ${calendarId}, assuming it was inserted by another request.`,
+			);
 			return null; // Alternatively, you can retrieve and return the existing event using getEventById(event.id).
 		}
 		throw err;
@@ -185,11 +191,12 @@ export async function insertEvent(event: Event): Promise<Event | null> {
  * @param event.end - required
  * @param event.summary - optional
  * @param event.description - optional
+ * @param calendarId - optional
  * @throws {Error} - if time format is invalid or missing required fields or start time is after end time
  */
-export async function updateEvent(event: Event): Promise<Event> {
+export async function updateEvent(event: Event, calendarId: string = DEFAULT_CALENDAR_ID): Promise<Event> {
 	const result = await calendar.events.update({
-		calendarId: "primary",
+		calendarId: calendarId,
 		eventId: event.id,
 		requestBody: event,
 	});
@@ -205,9 +212,12 @@ export async function updateEvent(event: Event): Promise<Event> {
  * @param timeMax - optional
  * @throws {Error} - if time format is invalid or timeMin is after timeMax
  */
-export async function listEvents({ timeMin, timeMax }: { timeMin?: string; timeMax?: string } = {}): Promise<Event[]> {
+export async function listEvents(
+	calendarId: string = DEFAULT_CALENDAR_ID,
+	{ timeMin, timeMax }: { timeMin?: string; timeMax?: string } = {},
+): Promise<Event[]> {
 	let options: any = {
-		calendarId: "primary",
+		calendarId: calendarId,
 		singleEvents: true,
 		orderBy: "startTime",
 	};
@@ -232,4 +242,8 @@ export async function listEvents({ timeMin, timeMax }: { timeMin?: string; timeM
 
 	const result = await calendar.events.list(options);
 	return result.data.items as Event[];
+}
+
+export async function listCalendars() {
+	return calendar.calendarList.list();
 }

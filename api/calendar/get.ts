@@ -1,11 +1,11 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import { Event } from "../../src/types/google-calendar.js";
 import { getEventById, isEventDeleted } from "../../src/platforms/google-calendar/client.js";
 
 export default async (req: VercelRequest, res: VercelResponse) => {
 	try {
 		const id: string = req.query.id as string;
-		const event = await getEventById(id);
+		const calendarId = req.query.calendarId as string;
+		const event = await getEventById(id, calendarId || undefined);
 
 		if (!event) {
 			res.status(500).json({ err_msg: `Event ${id} not found in calendar` });
