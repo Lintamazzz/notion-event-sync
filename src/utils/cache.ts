@@ -20,8 +20,8 @@ function getRedis(): Redis {
 const redis = getRedis();
 
 export const cache = {
-	async get(key: string): Promise<string | null> {
-		return await redis.get(key);
+	async get<T = string>(key: string): Promise<T | null> {
+		return await redis.get<T>(key);
 	},
 
 	async setex(key: string, value: string, options: SetOptions = {}): Promise<string | null> {

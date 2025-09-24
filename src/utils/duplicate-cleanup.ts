@@ -44,16 +44,14 @@ async function getDatabasePropertiesWithCache(databaseId: string): Promise<Recor
 	const cacheKey = `database_properties:${databaseId}`;
 	
 	// Try to get from cache first
-	const cached = await cache.get(cacheKey);
+	const cached = await cache.get<Record<string, string>>(cacheKey);
 	if (cached) {
-		try {
-			return JSON.parse(cached);
-		} catch (e) {
-			console.log("Failed to parse cached database properties, fetching fresh data");
-		}
+		console.log("Get database properties from cache");
+		return cached; // Redis client handles JSON parsing automatically
 	}
 
 	// Fetch fresh data
+	console.log("Fetch fresh database properties");
 	const propertiesMap = await getDatabaseProperties(databaseId);
 	
 	// Cache for 7 days
