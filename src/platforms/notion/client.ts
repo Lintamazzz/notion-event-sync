@@ -79,3 +79,24 @@ export async function queryPages({ start, end }: { start?: string; end?: string 
 
 	return pages;
 }
+
+/**
+ * Get database properties name -> id mapping
+ * @param databaseId - database ID
+ * @returns Promise<Record<string, string>> - property name to property id mapping
+ */
+export async function getDatabaseProperties(databaseId: string): Promise<Record<string, string>> {
+	const propertiesMap: Record<string, string> = {};
+	
+	if (!databaseId) {
+		throw new Error("databaseId is undefined");
+	}
+
+	const database = await notion.databases.retrieve({ database_id: databaseId });
+	
+	for (const [propertyName, property] of Object.entries(database.properties)) {
+		propertiesMap[propertyName] = property.id;
+	}
+	
+	return propertiesMap;
+}

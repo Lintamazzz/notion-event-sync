@@ -5,6 +5,7 @@ import { getPage } from "../notion/client.js";
 import { getCalendarIdByYear, getEventIdFromPageId, pageToEvent } from "../../utils/mapper.js";
 import { Event } from "../../types/google-calendar.js";
 import { deleteEventById, getEventById, insertEvent, updateEvent } from "./client.js";
+import { isDatePropertyModified, cleanupDuplicateEvents } from "../../utils/duplicate-cleanup.js";
 import "dotenv/config";
 
 // See: https://developers.notion.com/reference/webhooks-events-delivery#event-delivery
@@ -39,7 +40,7 @@ export class GoogleCalendarHandler implements Handler {
 		const calendarId: string | undefined = getCalendarIdByYear(e);
 		console.log(
 			calendarId === undefined
-				? `Not found in mapping, useing default calendar`
+				? `Not found in mapping, using default calendar`
 				: `Found in mapping, using calendar ${calendarId}`,
 		);
 
@@ -73,11 +74,18 @@ export class GoogleCalendarHandler implements Handler {
 		const calendarId: string | undefined = getCalendarIdByYear(e);
 		console.log(
 			calendarId === undefined
-				? `Not found in mapping, useing default calendar`
+				? `Not found in mapping, using default calendar`
 				: `Found in mapping, using calendar ${calendarId}`,
 		);
 
-		// 4. Sync to Calendar
+		// 4. Check if date property was modified and handle duplicate cleanup
+		const datePropertyModified = await isDatePropertyModified(event);
+		if (datePropertyModified) {
+			console.log(`Date property was modified for page ${pageId}, performing duplicate cleanup`);
+			await cleanupDuplicateEvents(pageId, e);
+		}
+
+		// 5. Sync to Calendar
 		const exist = await getEventById(e.id as string, calendarId);
 		if (exist) {
 			e.status = "confirmed"; // undelete if event is deleted
@@ -107,7 +115,7 @@ export class GoogleCalendarHandler implements Handler {
 		const calendarId: string | undefined = getCalendarIdByYear(e);
 		console.log(
 			calendarId === undefined
-				? `Not found in mapping, useing default calendar`
+				? `Not found in mapping, using default calendar`
 				: `Found in mapping, using calendar ${calendarId}`,
 		);
 

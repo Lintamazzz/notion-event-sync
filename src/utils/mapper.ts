@@ -80,22 +80,44 @@ export function getEventDateFromPageDate(dateString: string) {
 	throw new Error(`Invalid date format: ${dateString}`);
 }
 
-export function getCalendarIdByYear(event: Event): string | undefined {
+/**
+ * Get calendar mapping from environment variable
+ * @returns Record<string, string> | null - year to calendar ID mapping, or null if not available
+ */
+export function getCalendarMapping(): Record<string, string> | null {
 	const str = process.env.GOOGLE_CALENDAR_MAPPING;
 	if (!str) {
 		console.log("GOOGLE_CALENDAR_MAPPING is not set");
-		return undefined;
+		return null;
 	}
 
-	let map;
 	try {
-		map = JSON.parse(str);
+		return JSON.parse(str);
 	} catch (e) {
 		console.log("GOOGLE_CALENDAR_MAPPING is not valid JSON");
+		return null;
+	}
+}
+
+/**
+ * Get all available calendar IDs from the mapping
+ * @returns string[] - array of calendar IDs
+ */
+export function getAllCalendarIds(): string[] {
+	const mapping = getCalendarMapping();
+	if (!mapping) {
+		return [];
+	}
+	return Object.values(mapping);
+}
+
+export function getCalendarIdByYear(event: Event): string | undefined {
+	const mapping = getCalendarMapping();
+	if (!mapping) {
 		return undefined;
 	}
 
 	const date = event.start?.dateTime || event.start?.date;
 	const year = new Date(date as string).getFullYear();
-	return map[year] || undefined;
+	return mapping[year] || undefined;
 }
